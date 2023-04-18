@@ -6,6 +6,7 @@ Support for typing ctypes function pointers.
 import ctypes
 import sys
 
+from numpy as np
 from numba.core import types
 from numba.core.typing import templates
 from .typeof import typeof_impl
@@ -55,6 +56,11 @@ def from_ctypes(ctypeobj):
 
     ty = _convert_internal(ctypeobj)
     if ty is None:
+        if issubclass(ctypeobj, np.ctypeslib._ndptr):
+            valuety = np.ctypeslib.as_ctypes_type(ctypeobj._dtype_)
+            valuety = _convert_internal(valuety)
+            if valuety is not None:
+                return types.CPointer(valuety)
         raise TypeError("Unsupported ctypes type: %s" % ctypeobj)
     return ty
 
